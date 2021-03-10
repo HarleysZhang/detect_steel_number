@@ -1,25 +1,44 @@
 ## 比赛地址
+
 [智能盘点—钢筋数量AI识别](https://www.datafountain.cn/competitions/332/details)
+
 ## 环境依赖
+
 ```ubuntu, python3, tensorflow, keras, skimage, opencv-python, numpy, pandas, matplotlib等```
+
 ## 我的方案
+
 #### 关于检测/分割模型选择
-尝试了retinanet、faster rcnn、fpn和msak rcnn，其中mask rcnn得分0.980，从kaggle上得知使用U-Net全卷积网络进行语义分割可能效果比较好，目前还没有尝试。
+
+尝试了 `retinanet、faster rcnn、fpn` 和 `msak rcnn` ，其中 mask rcnn 得分 `0.980`，从 kaggle 上得知使用 U-Net 全卷积网络进行语义分割可能效果比较好，目前还没有尝试。
+
 #### 关于预训练模型
-经过后期大佬分享，建议选用coco预训练模型。
+
+经过后期大佬分享，建议选用 `coco` 预训练模型。
+
 #### 关于优化器选择
-+ 前期选择默认SGD优化器，后来在60epoch后选择用Adam优化器。
+
++ 前期选择默认 `SGD` 优化器，后来在 `60epoch` 后选择用 `Adam` 优化器。
 + I found that the model reaches a local minima faster when trained using Adam optimizer compared to default SGD optimizer。
+
 #### 关于学习率策略
-每隔25epoch，学习率下降10倍比较好。
+
+每隔 `25` epoch，学习率下降 `10` 倍比较好。
+
 #### 关于训练策略
+
 Train in 3 stages: on 512x512 crops containing ships, then finetune on 1024x1024, and finally on 2048x2048. Inference on full-sized 2000x2666 images(由于时间关系没有尝试)
+
 #### 关于图像尺寸
-图像尺寸越大越好，但是注意至少要为2^6倍数，受限于硬件条件我这里是2048*2048。
+
+图像尺寸越大越好，但是注意至少要为 $2^6$ 倍数，受限于硬件条件我这里是 `2048*2048`。
+
 #### 关于多尺度训练
-每次加载图像数据，随机选择一个图像尺寸来`read image`，这样可以让模型适应于检测目标尺寸变化较大的场景。比如图像size, 可以从这个列表中选取`[514+i*32, 1024]`, `i`表示训练`iter`。
-#### 关于数据增强
+
+每次加载图像数据，随机选择一个图像尺寸来 `read image`，这样可以让模型适应于检测目标尺寸变化较大的场景。比如图像 `size`, 可以从这个列表中选取 `[514+i*32, 1024]`, `i` 表示训练 `iter`。
+
 我不确定数据增强是否有很大效果，下面是我的数据增强方式：
+
 ```python
 augmentation = iaa.Sometimes(0.6,
                              iaa.Noop(),
@@ -37,22 +56,32 @@ augmentation = iaa.Sometimes(0.6,
                                  ]
                              ))
 ```
+
 ## 使用方法
+
 #### 1. Clone this repository
+
 ```bash
 git clone https://github.com/HarleysZhang/detect_steel_number.git
 ```
+
 #### 2. Install dependencies
+
 ```bash
 pip3 install -r requirements.txt
 ```
+
 #### 3. Run setup from the repository root directory
+
 ```bash
 python3 setup.py install
 ```
-#### 4.Download the data 
+
+#### 4.Download the data
+
 After download the data, put it into /path/samples/gangjin/dataset, file structure is:
-```
+
+```shell
 -gangjin
   - dataset/
     - rain/
@@ -67,25 +96,37 @@ After download the data, put it into /path/samples/gangjin/dataset, file structu
       - xxx.jpg
   - train_labels.csv
 ```
-#### 5.Oversample data (**Optional**) 
+
+#### 5.Oversample data (**Optional**)
+
 ```bash
 cd samples/gangjin/
 python3 oversample_data.py
 python3 read_json.py
 ```
+
 #### 6. convert the csv format to json format (**Optional**) 
+
 ```bash
 python3 read_json.py
 ```
+
 #### 7. train the model
+
 ```bash
 python gangjin.py train --dataset=./datasets/ --weights=coco
 ```
+
 #### 8. predict
+
 ```bash
 python3 predict.py
 ```
+
 ## 模型效果
-DCIC 钢筋数量识别 baseline 0.98+
+
+DCIC 钢筋数量识别比赛 baseline 模型精度 `0.98+`
+
 ## Reference
+
 [Mask R-CNN for object detection and instance segmentation on Keras and TensorFlow](https://github.com/matterport/Mask_RCNN)
